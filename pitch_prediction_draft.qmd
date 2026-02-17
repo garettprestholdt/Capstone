@@ -38,9 +38,9 @@ pca_data_full <- numeric_vars %>%
     "Induced Hor. Break"      = pfx_x,
     "Induced Vert. Break"     = pfx_z,
     "Total Vert. Drop" = api_break_z_with_gravity,
-    "Acceleration-X"          = ax,
+    "Accel-X"          = ax,
     "Acceleration-Y"          = ay,
-    "Acceleration-Z"          = az,
+    "Accel-Z"          = az,
     "Spin Rate"               = release_spin_rate,
     "Spin Axis"               = spin_axis
   )
@@ -65,15 +65,15 @@ vars_to_display <- c(
   "Induced Hor. Break", 
   "Induced Vert. Break",
   "Total Vert. Drop",
-  "Acceleration-X", 
-  "Acceleration-Y", 
-  "Acceleration-Z",
+  "Accel-X", 
+  #"Acceleration-Y", 
+  "Accel-Z",
   "Spin Rate",
   "Spin Axis"
 )
 
-# CH (Light Blue), CU (Dark Blue), FF (Red), SI (Orange), SL (Purple)
-pitch_colors <- c("#4EB3D3", "#084081", "#E31A1C", "#FD8D3C", "#88419D")
+# color legend
+pitch_colors <- c("#009ADE", "#50A315", "#E16A86", "#C86DD7", "#00AD9A")
 
 fviz_pca_biplot(pca_fit,
                 geom.ind = "point",
@@ -82,13 +82,12 @@ fviz_pca_biplot(pca_fit,
                 addEllipses = FALSE,
                 ellipse.type = "convex",
                 legend.title = "Pitch Type",
-                pointshape = 19,
+                pointshape = 18,
                 alpha.ind = 0.4,
                 select.var = list(name = vars_to_display), 
                 col.var = "black",
                 repel = TRUE) +
-  labs(title = "PCA Biplot: Velocity vs. Movement",
-       subtitle = "Warm colors = Fastballs | Cool colors = Offspeed/Breaking") +
+  labs(title = "PCA Biplot: Velocity vs. Movement") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
