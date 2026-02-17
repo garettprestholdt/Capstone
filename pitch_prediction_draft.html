@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Pitch Prediction Draft</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="pitch_prediction_draft_files/libs/clipboard/clipboard.min.js"></script>
+<script src="pitch_prediction_draft_files/libs/quarto-html/quarto.js"></script>
+<script src="pitch_prediction_draft_files/libs/quarto-html/popper.min.js"></script>
+<script src="pitch_prediction_draft_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="pitch_prediction_draft_files/libs/quarto-html/anchor.min.js"></script>
+<link href="pitch_prediction_draft_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="pitch_prediction_draft_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="pitch_prediction_draft_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="pitch_prediction_draft_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="pitch_prediction_draft_files/libs/bootstrap/bootstrap-1bc8a17f135ab3d594c857e9f48e611b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="pitch_prediction_draft_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+
+<link href="pitch_prediction_draft_files/libs/vis-9.1.0/vis-network.min.css" rel="stylesheet">
+
+<script src="pitch_prediction_draft_files/libs/vis-9.1.0/vis-network.min.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/visNetwork-binding-2.1.4/visNetwork.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/FileSaver-1.1.20151003/FileSaver.min.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/Blob-1.0/Blob.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/canvas-toBlob-1.0/canvas-toBlob.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/html2canvas-0.5.0/html2canvas.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/jspdf-1.3.2/jspdf.debug.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/jquery-1.11.3/jquery.min.js"></script>
+
+<link href="pitch_prediction_draft_files/libs/jquery-sparkline-2.1.2/jquery.sparkline.css" rel="stylesheet">
+
+<script src="pitch_prediction_draft_files/libs/jquery-sparkline-2.1.2/jquery.sparkline.js"></script>
+
+<script src="pitch_prediction_draft_files/libs/sparkline-binding-2.0/sparkline.js"></script>
+
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Pitch Prediction Draft</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(factoextra)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomForest)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DiagrammeR)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DiagrammeRsvg)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rsvg)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(visNetwork)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sparkline)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>full_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">'./data/Skubal_All.csv'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>pitch_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"FS"</span>, <span class="st">"FC"</span>, <span class="st">"KC"</span>, <span class="st">""</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pitch_type =</span> <span class="fu">as.factor</span>(pitch_type))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>numeric_vars <span class="ot">&lt;-</span> full_data <span class="sc">%&gt;%</span> </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(release_speed<span class="sc">:</span>api_break_x_batter_in)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(full_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  pitch_type release_speed release_pos_x release_pos_z pfx_x pfx_z plate_x
+1         SL          85.1          2.98          6.29 -0.17  0.06   -0.49
+2         FF          94.4          3.23          6.32  1.14  1.65    1.62
+3         FF          93.6          2.98          6.35  1.00  1.34    1.37
+4         FF          93.1          2.96          6.39  0.91  1.64    1.44
+5         CU          76.4          2.71          6.52 -0.26 -1.32    0.06
+6         CH          80.2          2.37          6.56  0.69  1.41   -0.41
+  plate_z       vx0       vy0       vz0         ax       ay        az sz_top
+1    3.18 -7.782973 -123.7210 -1.107625 -0.1730321 24.39321 -31.52337   3.55
+2    2.98 -6.675962 -137.0560 -6.557067 15.8994473 33.80978 -10.09480   3.62
+3    2.92 -6.308548 -136.0071 -5.991313 13.8232515 32.57272 -14.43509   3.49
+4    2.99 -5.883010 -135.3530 -6.501201 12.5090746 30.77690 -10.75805   3.49
+5   -1.13 -5.115604 -111.1055 -6.662703 -1.1871197 20.42837 -42.03283   3.53
+6    2.05 -7.421521 -116.5141 -5.920808  7.6929695 21.30094 -18.34594   3.45
+  sz_bot effective_speed release_spin_rate release_extension release_pos_y
+1   1.70            84.9              1483               6.2         54.35
+2   1.67            93.3              2385               6.0         54.49
+3   1.60            92.8              2251               6.1         54.39
+4   1.60            92.6              2279               6.1         54.39
+5   1.70            76.1              2287               6.2         54.34
+6   1.58            79.9              1405               6.1         54.38
+  spin_axis api_break_z_with_gravity api_break_x_arm api_break_x_batter_in
+1       206                     3.09           -0.17                  0.17
+2       136                     0.94            1.14                 -1.14
+3       141                     1.29            1.00                 -1.00
+4       140                     1.00            0.91                 -0.91
+5       339                     5.23           -0.26                  0.26
+6       136                     2.13            0.69                 -0.69</code></pre>
+</div>
+</div>
+<section id="pca-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="pca-analysis">PCA Analysis</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pca_data_full <span class="ot">&lt;-</span> numeric_vars <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Velocity"</span>             <span class="ot">=</span> release_speed,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Induced Hor. Break"</span>      <span class="ot">=</span> pfx_x,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Induced Vert. Break"</span>     <span class="ot">=</span> pfx_z,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Total Vert. Drop"</span> <span class="ot">=</span> api_break_z_with_gravity,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Acceleration-X"</span>          <span class="ot">=</span> ax,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Acceleration-Y"</span>          <span class="ot">=</span> ay,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Acceleration-Z"</span>          <span class="ot">=</span> az,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Spin Rate"</span>               <span class="ot">=</span> release_spin_rate,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Spin Axis"</span>               <span class="ot">=</span> spin_axis</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>pca_fit <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(pca_data_full, <span class="at">scale =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Importance of components:
+                          PC1    PC2    PC3     PC4     PC5     PC6     PC7
+Standard deviation     2.8618 1.8689 1.5888 1.39210 1.34169 1.07572 0.98160
+Proportion of Variance 0.3561 0.1519 0.1098 0.08426 0.07827 0.05031 0.04189
+Cumulative Proportion  0.3561 0.5079 0.6177 0.70195 0.78022 0.83053 0.87243
+                           PC8     PC9    PC10    PC11    PC12    PC13    PC14
+Standard deviation     0.87228 0.85203 0.80051 0.49112 0.45053 0.41851 0.39477
+Proportion of Variance 0.03308 0.03156 0.02786 0.01049 0.00882 0.00762 0.00678
+Cumulative Proportion  0.90551 0.93707 0.96493 0.97542 0.98424 0.99186 0.99863
+                          PC15    PC16    PC17   PC18    PC19    PC20     PC21
+Standard deviation     0.11916 0.09832 0.06184 0.0477 0.03324 0.01626 0.007211
+Proportion of Variance 0.00062 0.00042 0.00017 0.0001 0.00005 0.00001 0.000000
+Cumulative Proportion  0.99925 0.99967 0.99984 0.9999 0.99999 1.00000 1.000000
+                           PC22      PC23
+Standard deviation     0.003775 1.835e-16
+Proportion of Variance 0.000000 0.000e+00
+Cumulative Proportion  1.000000 1.000e+00</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_eig</span>(pca_fit, <span class="at">addlabels =</span> <span class="cn">TRUE</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">40</span>)) <span class="sc">+</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Scree Plot: Variance Explained by PC"</span>) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in geom_bar(stat = "identity", fill = barfill, color = barcolor, :
+Ignoring empty aesthetic: `width`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(pca_fit, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span>, <span class="at">top =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Contribution to PC1"</span>, <span class="at">x =</span> <span class="st">''</span>) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">35</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-2-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>vars_to_display <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Velocity"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Induced Hor. Break"</span>, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Induced Vert. Break"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Total Vert. Drop"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Acceleration-X"</span>, </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Acceleration-Y"</span>, </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Acceleration-Z"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Spin Rate"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Spin Axis"</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># CH (Light Blue), CU (Dark Blue), FF (Red), SI (Orange), SL (Purple)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>pitch_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"#4EB3D3"</span>, <span class="st">"#084081"</span>, <span class="st">"#E31A1C"</span>, <span class="st">"#FD8D3C"</span>, <span class="st">"#88419D"</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_biplot</span>(pca_fit,</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">geom.ind =</span> <span class="st">"point"</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>                <span class="at">col.ind =</span> full_data<span class="sc">$</span>pitch_type,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                <span class="at">palette =</span> pitch_colors,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>                <span class="at">addEllipses =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>                <span class="at">ellipse.type =</span> <span class="st">"convex"</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>                <span class="at">legend.title =</span> <span class="st">"Pitch Type"</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>                <span class="at">pointshape =</span> <span class="dv">19</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>                <span class="at">alpha.ind =</span> <span class="fl">0.4</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>                <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span> vars_to_display), </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>                <span class="at">col.var =</span> <span class="st">"black"</span>,</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>                <span class="at">repel =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"PCA Biplot: Velocity vs. Movement"</span>,</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Warm colors = Fastballs | Cool colors = Offspeed/Breaking"</span>) <span class="sc">+</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the ggpubr package.
+  Please report the issue at &lt;https://github.com/kassambara/ggpubr/issues&gt;.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Ignoring unknown labels:
+• fill : "Pitch Type"
+• linetype : "Pitch Type"
+• shape : "Pitch Type"</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-2-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="model-building-and-splitting" class="level3">
+<h3 class="anchored" data-anchor-id="model-building-and-splitting">Model Building and Splitting</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">326</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(full_data)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> <span class="fl">0.7</span> <span class="sc">*</span> n)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> full_data[train_idx, ]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>remaining_data <span class="ot">&lt;-</span> full_data[<span class="sc">-</span>train_idx, ]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>n_rem <span class="ot">&lt;-</span> <span class="fu">nrow</span>(remaining_data)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>test_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n_rem, <span class="at">size =</span> (<span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>) <span class="sc">*</span> n_rem)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> remaining_data[test_idx, ]</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>val_data  <span class="ot">&lt;-</span> remaining_data[<span class="sc">-</span>test_idx, ]</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(train_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      pitch_type release_speed release_pos_x release_pos_z pfx_x pfx_z plate_x
+1893          SL          86.6          3.10          6.33 -0.21  0.37   -0.14
+13120         FF          95.2          1.48          6.55  0.67  1.34    0.35
+876           SL          85.9          3.01          6.17 -0.17  0.46    0.25
+13056         CH          90.6          1.84          6.27  1.31 -0.06    0.44
+927           FF          95.2          2.97          6.15  0.97  1.28    0.73
+6878          SI          97.6          1.68          6.36  1.05  1.46    0.70
+      plate_z       vx0       vy0       vz0         ax       ay        az
+1893     1.94 -7.317136 -125.8936 -5.016060 -0.7040781 26.02926 -27.34157
+13120    3.09 -4.446815 -138.4358 -6.444157  9.5878953 30.80835 -13.63582
+876      2.43 -6.163156 -125.0426 -3.565959 -0.6310228 22.98230 -26.89245
+13056    1.52 -6.292109 -131.6228 -5.728012 16.5698623 29.67460 -31.81375
+927      3.42 -8.038329 -138.3904 -4.399202 14.2380465 29.30528 -14.91923
+6878     2.52 -5.062329 -141.7934 -8.122759 15.2874492 36.16862 -10.79698
+      sz_top sz_bot effective_speed release_spin_rate release_extension
+1893    3.32   1.51            86.6              2078               6.4
+13120   3.12   1.57            95.0              2238               6.2
+876     3.49   1.60            85.8              1965               6.0
+13056   3.45   1.63            90.4              1655               6.4
+927     3.22   1.45            95.3              2096               6.3
+6878    3.49   1.67            97.3              2074               6.4
+      release_pos_y spin_axis api_break_z_with_gravity api_break_x_arm
+1893          54.14       172                     2.67           -0.21
+13120         54.31       152                     1.17            0.67
+876           54.47       148                     2.61           -0.17
+13056         54.13       130                     2.86            1.31
+927           54.19       143                     1.23            0.97
+6878          54.05       153                     0.96            1.05
+      api_break_x_batter_in
+1893                   0.21
+13120                 -0.67
+876                    0.17
+13056                 -1.31
+927                   -0.97
+6878                   1.05</code></pre>
+</div>
+</div>
+</section>
+<section id="cart-model" class="level3">
+<h3 class="anchored" data-anchor-id="cart-model">CART Model</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cart_fit <span class="ot">&lt;-</span> <span class="fu">rpart</span>(pitch_type <span class="sc">~</span> ., <span class="at">data =</span> train_data, <span class="at">method =</span> <span class="st">"class"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>cart_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(cart_fit, test_data, <span class="at">type =</span> <span class="st">"class"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(cart_pred, test_data<span class="sc">$</span>pitch_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction  CH  CU  FF  SI  SL
+        CH 624   0   0  22   2
+        CU   0 143   0   0   5
+        FF   3   0 867  31  11
+        SI   0   0  41 423   0
+        SL   5   1   0   0 477
+
+Overall Statistics
+                                         
+               Accuracy : 0.9544         
+                 95% CI : (0.9458, 0.962)
+    No Information Rate : 0.342          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+                                         
+                  Kappa : 0.9397         
+                                         
+ Mcnemar's Test P-Value : NA             
+
+Statistics by Class:
+
+                     Class: CH Class: CU Class: FF Class: SI Class: SL
+Sensitivity             0.9873   0.99306    0.9548    0.8887    0.9636
+Specificity             0.9881   0.99801    0.9742    0.9812    0.9972
+Pos Pred Value          0.9630   0.96622    0.9507    0.9116    0.9876
+Neg Pred Value          0.9960   0.99960    0.9765    0.9758    0.9917
+Prevalence              0.2380   0.05424    0.3420    0.1793    0.1864
+Detection Rate          0.2350   0.05386    0.3266    0.1593    0.1797
+Detection Prevalence    0.2441   0.05574    0.3435    0.1748    0.1819
+Balanced Accuracy       0.9877   0.99553    0.9645    0.9349    0.9804</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visual</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>graph_widget <span class="ot">&lt;-</span> <span class="fu">visTree</span>(cart_fit, </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">main =</span> <span class="st">"Pitch Type Classification Tree"</span>, </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">width =</span> <span class="st">"100%"</span>, </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">height =</span> <span class="st">"800px"</span>, </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nodesPopSize =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visNodes</span>(<span class="at">font =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">26</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">color =</span> <span class="st">"black"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visEdges</span>(<span class="at">font =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">18</span>, </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">align =</span> <span class="st">"horizontal"</span>, </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">background =</span> <span class="st">"white"</span>, </span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>                       <span class="at">strokeWidth =</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visHierarchicalLayout</span>(<span class="at">direction =</span> <span class="st">"UD"</span>, </span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">levelSeparation =</span> <span class="dv">200</span>, </span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                        <span class="at">nodeSpacing =</span> <span class="dv">250</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visOptions</span>(<span class="at">highlightNearest =</span> <span class="fu">list</span>(<span class="at">enabled =</span> <span class="cn">TRUE</span>, <span class="at">degree =</span> <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visInteraction</span>(<span class="at">dragNodes =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>                 <span class="at">zoomView =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>graph_widget</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="htmlwidget-555b98f951704e14bd23" style="width:100%;height:800px;" class="visNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-555b98f951704e14bd23">{"x":{"nodes":{"id":[1,2,4,5,10,11,3,6,7],"label":["api_break_z_with_gravity","pfx_x","CH","api_break_z_with_gravity","CU","SL","ax","FF","SI"],"level":[1,2,3,3,4,4,2,3,3],"color":["#F1B8C2","#A9D1A5","#7D91B6","#F1B8C2","#988AB6","#B9828C","#B4C7ED","#AC83AE","#B7809F"],"value":[9292,4291,2062,2229,492,1737,5001,3373,1628],"shape":["dot","dot","square","dot","square","square","dot","square","square"],"title":["<div style=\"text-align:center;\">N : <b>100%<\/b> (9292)<br>Complexity : <b>0.337<\/b><br>CH : <b>21.6%<\/b> (2008)<br>CU : <b>5.3%<\/b> (489)<br>FF : <b>36.2%<\/b> (3362)<br>SI : <b>17.9%<\/b> (1666)<br>SL : <b>19%<\/b> (1767)<\/div>","<div style=\"text-align:center;\">N : <b>46.2%<\/b> (4291)<br>Complexity : <b>0.29<\/b><br>CH : <b>46.5%<\/b> (1997)<br>CU : <b>11.4%<\/b> (489)<br>FF : <b>0%<\/b> (1)<br>SI : <b>1.6%<\/b> (67)<br>SL : <b>40.5%<\/b> (1737)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> >= 1.785<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>22.2%<\/b> (2062)<br>Complexity : <b>0.01<\/b><br>CH : <b>96.3%<\/b> (1986)<br>CU : <b>0%<\/b> (0)<br>FF : <b>0%<\/b> (0)<br>SI : <b>3.2%<\/b> (67)<br>SL : <b>0.4%<\/b> (9)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> >= 1.785<br><b> pfx_x <\/b> >= 0.315<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>24%<\/b> (2229)<br>Complexity : <b>0.081<\/b><br>CH : <b>0.5%<\/b> (11)<br>CU : <b>21.9%<\/b> (489)<br>FF : <b>0%<\/b> (1)<br>SI : <b>0%<\/b> (0)<br>SL : <b>77.5%<\/b> (1728)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> >= 1.785<br><b> pfx_x <\/b> < 0.315<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>5.3%<\/b> (492)<br>Complexity : <b>0.01<\/b><br>CH : <b>0%<\/b> (0)<br>CU : <b>98.8%<\/b> (486)<br>FF : <b>0%<\/b> (0)<br>SI : <b>0%<\/b> (0)<br>SL : <b>1.2%<\/b> (6)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> >= 3.43<br><b> pfx_x <\/b> < 0.315<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>18.7%<\/b> (1737)<br>Complexity : <b>0.01<\/b><br>CH : <b>0.6%<\/b> (11)<br>CU : <b>0.2%<\/b> (3)<br>FF : <b>0.1%<\/b> (1)<br>SI : <b>0%<\/b> (0)<br>SL : <b>99.1%<\/b> (1722)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b>  <\/b> 1.785 <= <b>api_break_z_with_gravity<\/b> < 3.43<br><b> pfx_x <\/b> < 0.315<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>53.8%<\/b> (5001)<br>Complexity : <b>0.221<\/b><br>CH : <b>0.2%<\/b> (11)<br>CU : <b>0%<\/b> (0)<br>FF : <b>67.2%<\/b> (3361)<br>SI : <b>32%<\/b> (1599)<br>SL : <b>0.6%<\/b> (30)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> < 1.785<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>36.3%<\/b> (3373)<br>Complexity : <b>0<\/b><br>CH : <b>0.3%<\/b> (10)<br>CU : <b>0%<\/b> (0)<br>FF : <b>95%<\/b> (3203)<br>SI : <b>3.9%<\/b> (130)<br>SL : <b>0.9%<\/b> (30)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> < 1.785<br><b> ax <\/b> < 14.403<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>","<div style=\"text-align:center;\">N : <b>17.5%<\/b> (1628)<br>Complexity : <b>0.007<\/b><br>CH : <b>0.1%<\/b> (1)<br>CU : <b>0%<\/b> (0)<br>FF : <b>9.7%<\/b> (158)<br>SI : <b>90.2%<\/b> (1469)<br>SL : <b>0%<\/b> (0)<hr class = \"rPartvisNetwork\">\n<div class =\"showOnMe2\"><div style=\"text-align:center;\"><U style=\"color:blue;\"  onmouseover=\"this.style.cursor='pointer';\" onmouseout=\"this.style.cursor='default';\">Rules<\/U><\/div>\n<div class=\"showMeRpartTTp2\" style=\"display:none;\">\n<b> api_break_z_with_gravity <\/b> < 1.785<br><b> ax <\/b> >= 14.403<\/script><script type=\"text/javascript\">$(document).ready(function(){\n$(\".showOnMe2\").click(function(){\n$(\".showMeRpartTTp2\").toggle();\n$.sparkline_display_visible();\n});\n  });<\/script><\/div><\/div>\n\n<\/div>"],"fixed":[true,true,true,true,true,true,true,true,true],"colorClust":["#AC83AE","#7D91B6","#7D91B6","#B9828C","#988AB6","#B9828C","#AC83AE","#AC83AE","#B7809F"],"labelClust":["FF","CH","CH","SL","CU","SL","FF","FF","SI"],"Leaf":[0,0,1,0,1,1,0,1,1],"font.size":[16,16,16,16,16,16,16,16,16],"scaling.min":[15,15,15,15,15,15,15,15,15],"scaling.max":[30,30,30,30,30,30,30,30,30]},"edges":{"id":["edge1","edge2","edge3","edge4","edge5","edge6","edge7","edge8"],"from":[1,2,2,5,5,1,3,3],"to":[2,4,5,10,11,3,6,7],"label":[">= 1.785",">= 0.315","< 0.315",">= 3.43","< 3.43","< 1.785","< 14.403",">= 14.403"],"value":[4291,2062,2229,492,1737,5001,3373,1628],"title":["<div style=\"text-align:center;\"><b>api_break_z_with_gravity<\/b><\/div><div style=\"text-align:center;\">>=1.785<\/div>","<div style=\"text-align:center;\"><b>pfx_x<\/b><\/div><div style=\"text-align:center;\">>=0.315<\/div>","<div style=\"text-align:center;\"><b>pfx_x<\/b><\/div><div style=\"text-align:center;\"><0.315<\/div>","<div style=\"text-align:center;\"><b>api_break_z_with_gravity<\/b><\/div><div style=\"text-align:center;\">>=3.43<\/div>","<div style=\"text-align:center;\"><b>api_break_z_with_gravity<\/b><\/div><div style=\"text-align:center;\"><3.43<\/div>","<div style=\"text-align:center;\"><b>api_break_z_with_gravity<\/b><\/div><div style=\"text-align:center;\"><1.785<\/div>","<div style=\"text-align:center;\"><b>ax<\/b><\/div><div style=\"text-align:center;\"><14.403<\/div>","<div style=\"text-align:center;\"><b>ax<\/b><\/div><div style=\"text-align:center;\">>=14.403<\/div>"],"color":["#8181F7","#8181F7","#8181F7","#8181F7","#8181F7","#8181F7","#8181F7","#8181F7"],"font.size":[14,14,14,14,14,14,14,14],"font.align":["horizontal","horizontal","horizontal","horizontal","horizontal","horizontal","horizontal","horizontal"],"smooth.enabled":[true,true,true,true,true,true,true,true],"smooth.type":["cubicBezier","cubicBezier","cubicBezier","cubicBezier","cubicBezier","cubicBezier","cubicBezier","cubicBezier"],"smooth.roundness":[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","font":{"size":26,"face":"bold","color":"black"}},"manipulation":{"enabled":false},"layout":{"hierarchical":{"enabled":true,"levelSeparation":200,"nodeSpacing":250,"direction":"UD"}},"interaction":{"selectConnectedEdges":false,"tooltipDelay":500,"dragNodes":true,"zoomView":true,"zoomSpeed":1},"edges":{"scaling":{"label":{"enabled":false}},"font":{"size":18,"align":"horizontal","background":"white","strokeWidth":0}}},"groups":null,"width":"100%","height":"800px","idselection":{"enabled":false,"style":"width: 150px; height: 26px","useLabels":true,"main":"Select by id"},"byselection":{"enabled":false,"style":"width: 150px; height: 26px","multiple":false,"hideColor":"rgba(200,200,200,0.5)","highlight":false},"main":{"text":"Pitch Type Classification Tree","style":"font-family:Georgia, Times New Roman, Times, serif;font-weight:bold;font-size:20px;text-align:center;"},"submain":{"text":"","style":"font-family:Georgia, Times New Roman, Times, serif;font-size:12px;text-align:center;"},"footer":{"text":"","style":"font-family:Georgia, Times New Roman, Times, serif;font-size:12px;text-align:center;"},"background":"rgba(0, 0, 0, 0)","highlight":{"enabled":true,"hoverNearest":false,"degree":1,"algorithm":"all","hideColor":"rgba(200,200,200,0.5)","labelOnly":true},"collapse":{"enabled":false,"fit":false,"resetHighlight":true,"clusterOptions":null,"keepCoord":true,"labelSuffix":"(cluster)"},"OnceEvents":{"stabilized":"function() { \n        this.setOptions({layout:{hierarchical:false}, physics:{solver:'barnesHut', enabled:true, stabilization : false}, nodes : {physics : false, fixed : true}});\n    }"},"legend":{"width":0.1,"useGroups":false,"position":"left","ncol":1,"stepX":100,"stepY":100,"zoom":true,"nodes":{"label":["api_break_z_with_gravity","ax","pfx_x","CH","CU","FF","SI","SL"],"color":["#F1B8C2","#B4C7ED","#A9D1A5","#7D91B6","#988AB6","#AC83AE","#B7809F","#B9828C"],"shape":["dot","dot","dot","square","square","square","square","square"],"size":[22,22,22,22,22,22,22,22],"Leaf":[0,0,0,1,1,1,1,1],"font.size":[16,16,16,16,16,16,16,16],"id":[10000,10001,10002,10003,10004,10005,10006,10007]},"nodesToDataframe":true},"tree":{"updateShape":true,"shapeVar":"dot","shapeY":"square","colorVar":{"variable":["api_break_z_with_gravity","pfx_x","ax"],"color":["#F1B8C2","#A9D1A5","#B4C7ED"]},"colorY":{"colorY":{"modality":["CH","CU","FF","SI","SL"],"color":["#7D91B6","#988AB6","#AC83AE","#B7809F","#B9828C"]},"vardecidedClust":["FF","CH","CH","SL","CU","SL","FF","FF","SI"]}},"export":{"type":"png","css":"float:right;-webkit-border-radius: 10;\n                  -moz-border-radius: 10;\n                  border-radius: 10px;\n                  font-family: Arial;\n                  color: #ffffff;\n                  font-size: 12px;\n                  background: #090a0a;\n                  padding: 4px 8px 4px 4px;\n                  text-decoration: none;","background":"#fff","name":"network.png","label":"Export as png"},"tooltipStay":300,"tooltipStyle":"position: fixed;visibility:hidden;padding: 5px;white-space: nowrap;font-family: verdana;font-size:14px;font-color:#000000;background-color: #f5f4ed;-moz-border-radius: 3px;-webkit-border-radius: 3px;border-radius: 3px;border: 1px solid #808074;box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"},"evals":["OnceEvents.stabilized"],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="random-forest" class="level3">
+<h3 class="anchored" data-anchor-id="random-forest">Random Forest</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rf_fit <span class="ot">&lt;-</span> <span class="fu">randomForest</span>(pitch_type <span class="sc">~</span> ., <span class="at">data =</span> train_data, <span class="at">ntree =</span> <span class="dv">500</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>rf_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf_fit, test_data)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(rf_pred, test_data<span class="sc">$</span>pitch_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction  CH  CU  FF  SI  SL
+        CH 631   0   0   1   1
+        CU   0 144   0   0   2
+        FF   0   0 903  10   1
+        SI   1   0   5 465   0
+        SL   0   0   0   0 491
+
+Overall Statistics
+                                          
+               Accuracy : 0.9921          
+                 95% CI : (0.9879, 0.9951)
+    No Information Rate : 0.342           
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.9895          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: CH Class: CU Class: FF Class: SI Class: SL
+Sensitivity             0.9984   1.00000    0.9945    0.9769    0.9919
+Specificity             0.9990   0.99920    0.9937    0.9972    1.0000
+Pos Pred Value          0.9968   0.98630    0.9880    0.9873    1.0000
+Neg Pred Value          0.9995   1.00000    0.9971    0.9950    0.9982
+Prevalence              0.2380   0.05424    0.3420    0.1793    0.1864
+Detection Rate          0.2377   0.05424    0.3401    0.1751    0.1849
+Detection Prevalence    0.2384   0.05499    0.3443    0.1774    0.1849
+Balanced Accuracy       0.9987   0.99960    0.9941    0.9871    0.9960</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">varImpPlot</span>(rf_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="xgboost" class="level3">
+<h3 class="anchored" data-anchor-id="xgboost">XGBoost</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>train_x <span class="ot">&lt;-</span> <span class="fu">data.matrix</span>(<span class="fu">select</span>(train_data, <span class="sc">-</span>pitch_type))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>train_y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(train_data<span class="sc">$</span>pitch_type) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>test_x  <span class="ot">&lt;-</span> <span class="fu">data.matrix</span>(<span class="fu">select</span>(test_data, <span class="sc">-</span>pitch_type))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>test_y  <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(test_data<span class="sc">$</span>pitch_type) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>dtrain <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>dtest  <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_x, <span class="at">label =</span> test_y)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dtrain,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds =</span> <span class="dv">100</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">objective =</span> <span class="st">"multi:softmax"</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">num_class =</span> <span class="fu">length</span>(<span class="fu">unique</span>(train_y)),</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="dv">0</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in check.deprecation(deprecated_train_params, match.call(), ...):
+Passed invalid function arguments: num_class. These should be passed as a list
+to argument 'params'. Conversion from argument to 'params' entry will be done
+automatically, but this behavior will become an error in a future version.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in check.custom.obj(params, objective): Argument 'objective' is only
+for custom objectives. For built-in objectives, pass the objective under
+'params'. This warning will become an error in a future version.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>xgb_pred_num <span class="ot">&lt;-</span> <span class="fu">predict</span>(xgb_fit, dtest)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>xgb_pred_fac <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type)[xgb_pred_num <span class="sc">+</span> <span class="dv">1</span>],</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">levels =</span> <span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type))</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(xgb_pred_fac, test_data<span class="sc">$</span>pitch_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction  CH  CU  FF  SI  SL
+        CH 631   0   0   1   0
+        CU   0 144   0   0   1
+        FF   0   0 905   8   1
+        SI   1   0   3 467   0
+        SL   0   0   0   0 493
+
+Overall Statistics
+                                          
+               Accuracy : 0.9944          
+                 95% CI : (0.9907, 0.9968)
+    No Information Rate : 0.342           
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.9925          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: CH Class: CU Class: FF Class: SI Class: SL
+Sensitivity             0.9984   1.00000    0.9967    0.9811    0.9960
+Specificity             0.9995   0.99960    0.9948    0.9982    1.0000
+Pos Pred Value          0.9984   0.99310    0.9902    0.9915    1.0000
+Neg Pred Value          0.9995   1.00000    0.9983    0.9959    0.9991
+Prevalence              0.2380   0.05424    0.3420    0.1793    0.1864
+Detection Rate          0.2377   0.05424    0.3409    0.1759    0.1857
+Detection Prevalence    0.2380   0.05461    0.3443    0.1774    0.1857
+Balanced Accuracy       0.9990   0.99980    0.9958    0.9896    0.9980</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># visual</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>graph_widget <span class="ot">&lt;-</span> <span class="fu">xgb.plot.tree</span>(<span class="at">model =</span> xgb_fit, <span class="at">tree_idx =</span> <span class="dv">1</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Convert the widget to SVG code</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># This bridges the gap since we can't use render=FALSE anymore</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>svg_code <span class="ot">&lt;-</span> <span class="fu">export_svg</span>(graph_widget)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Export to High-Res PDF (Best for reports)</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rsvg_pdf</span>(<span class="fu">charToRaw</span>(svg_code), <span class="at">file =</span> <span class="st">"./Visuals/skubal_tree_highres.pdf"</span>)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Export to High-Res PNG (Best for slides)</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="co"># width/height control the resolution</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="fu">rsvg_png</span>(<span class="fu">charToRaw</span>(svg_code), <span class="at">file =</span> <span class="st">"./Visuals/skubal_tree_highres.png"</span>, <span class="at">width =</span> <span class="dv">3000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="does-this-model-perform-well-on-other-pitchers" class="level3">
+<h3 class="anchored" data-anchor-id="does-this-model-perform-well-on-other-pitchers">Does this model perform well on other pitchers?</h3>
+<section id="ryan-weathers-is-also-a-left-handed-pitcher-with-a-similar-arsenal-he-throws-a-sweeper-instead-of-a-typical-curveball-however." class="level5">
+<h5 class="anchored" data-anchor-id="ryan-weathers-is-also-a-left-handed-pitcher-with-a-similar-arsenal-he-throws-a-sweeper-instead-of-a-typical-curveball-however.">Ryan Weathers is also a left-handed pitcher with a similar arsenal, he throws a sweeper instead of a typical curveball, however.</h5>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prep</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>weathers <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/weathers_full.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pitch_type <span class="sc">!=</span> <span class="st">""</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>preds_weathers <span class="ot">&lt;-</span> weathers <span class="sc">%&gt;%</span> </span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">colnames</span>(train_x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.matrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xgb.DMatrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(xgb_fit, .) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type)[. <span class="sc">+</span> <span class="dv">1</span>]} </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Align levels</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>u_levels <span class="ot">&lt;-</span> <span class="fu">union</span>(<span class="fu">unique</span>(preds_weathers), <span class="fu">unique</span>(weathers<span class="sc">$</span>pitch_type))</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>pred_fac <span class="ot">&lt;-</span> <span class="fu">factor</span>(preds_weathers, <span class="at">levels =</span> u_levels)</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>act_fac  <span class="ot">&lt;-</span> <span class="fu">factor</span>(weathers<span class="sc">$</span>pitch_type, <span class="at">levels =</span> u_levels)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate stats</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>cm1 <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_fac, act_fac)</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cm1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   FF   SL   CH   SI   CU   ST
+        FF 1878    0    5   14    0    0
+        SL    0  570   12    0    0  439
+        CH   20    0  974    5    0    1
+        SI  562    0    4  369    0    0
+        CU    0    1    0    0    0  258
+        ST    0    0    0    0    0    0
+
+Overall Statistics
+                                          
+               Accuracy : 0.7416          
+                 95% CI : (0.7294, 0.7535)
+    No Information Rate : 0.4812          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.6541          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: FF Class: SL Class: CH Class: SI Class: CU
+Sensitivity             0.7634    0.9982    0.9789   0.95103        NA
+Specificity             0.9928    0.9007    0.9937   0.88019   0.94933
+Pos Pred Value          0.9900    0.5583    0.9740   0.39465        NA
+Neg Pred Value          0.8190    0.9998    0.9949   0.99545        NA
+Prevalence              0.4812    0.1117    0.1946   0.07590   0.00000
+Detection Rate          0.3674    0.1115    0.1905   0.07218   0.00000
+Detection Prevalence    0.3711    0.1997    0.1956   0.18290   0.05067
+Balanced Accuracy       0.8781    0.9495    0.9863   0.91561        NA
+                     Class: ST
+Sensitivity             0.0000
+Specificity             1.0000
+Pos Pred Value             NaN
+Neg Pred Value          0.8635
+Prevalence              0.1365
+Detection Rate          0.0000
+Detection Prevalence    0.0000
+Balanced Accuracy       0.5000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot percentages (Recall)</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(cm1<span class="sc">$</span>table) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Reference) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> Freq <span class="sc">/</span> <span class="fu">sum</span>(Freq)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Prediction, Reference, <span class="at">fill =</span> Pct)) <span class="sc">+</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(Pct, <span class="at">accuracy =</span> <span class="dv">1</span>)), <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"gray87"</span>, <span class="at">high =</span> <span class="st">"forestgreen"</span>, <span class="at">labels =</span> scales<span class="sc">::</span>percent) <span class="sc">+</span> </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Prediction Accuracy % by Pitch Type (Weathers)"</span>, <span class="at">x =</span> <span class="st">"Predicted"</span>, <span class="at">y =</span> <span class="st">"Actual"</span>) <span class="sc">+</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 6 rows containing missing values or values outside the scale range
+(`geom_text()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-model-did-pretty-decently-overall-with-at-least-87-balanced-accuracy-for-all-pitches-that-were-in-the-training-data-those-in-skubals-arsenal.-however-ryan-weathers-has-a-pretty-similar-movement-profile-as-skubal-so-next-ill-look-at-a-pitcher-with-some-of-the-same-pitches-but-maybe-not-quite-as-elite-of-a-movement-profile-as-these-two-that-being-patrick-sandoval-hes-pretty-much-perfect-for-this-because-he-throws-the-same-5-pitches-as-skubal-does-according-to-baseballsavant.com." class="level3">
+<h3 class="anchored" data-anchor-id="the-model-did-pretty-decently-overall-with-at-least-87-balanced-accuracy-for-all-pitches-that-were-in-the-training-data-those-in-skubals-arsenal.-however-ryan-weathers-has-a-pretty-similar-movement-profile-as-skubal-so-next-ill-look-at-a-pitcher-with-some-of-the-same-pitches-but-maybe-not-quite-as-elite-of-a-movement-profile-as-these-two-that-being-patrick-sandoval-hes-pretty-much-perfect-for-this-because-he-throws-the-same-5-pitches-as-skubal-does-according-to-baseballsavant.com.">The model did pretty decently overall, with at least 87% balanced accuracy for all pitches that were in the training data (those in Skubal’s Arsenal). However, Ryan Weathers has a pretty similar movement profile as Skubal, so next I’ll look at a pitcher with some of the same pitches, but maybe not quite as elite of a movement profile as these two, that being Patrick Sandoval, he’s pretty much perfect for this because he throws the same 5 pitches as skubal does, according to baseballsavant.com.</h3>
+</section>
+<section id="patrick-sandoval" class="level3">
+<h3 class="anchored" data-anchor-id="patrick-sandoval">Patrick Sandoval</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prep Sandoval data</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>sandoval <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/sandoval_full.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pitch_type <span class="sc">!=</span> <span class="st">""</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>preds_sand <span class="ot">&lt;-</span> sandoval <span class="sc">%&gt;%</span> </span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">colnames</span>(train_x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.matrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xgb.DMatrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(xgb_fit, .) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type)[. <span class="sc">+</span> <span class="dv">1</span>]} </span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Align levels</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>u_levels <span class="ot">&lt;-</span> <span class="fu">union</span>(<span class="fu">unique</span>(preds_sand), <span class="fu">unique</span>(sandoval<span class="sc">$</span>pitch_type))</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>pred_fac <span class="ot">&lt;-</span> <span class="fu">factor</span>(preds_sand, <span class="at">levels =</span> u_levels)</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>act_fac  <span class="ot">&lt;-</span> <span class="fu">factor</span>(sandoval<span class="sc">$</span>pitch_type, <span class="at">levels =</span> u_levels)</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate stats</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>cm2 <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_fac, act_fac)</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cm2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   SL   CH   FF   CU   SI   ST
+        SL 2150    0   36    0    0   54
+        CH    2 2496   32    1  108    0
+        FF    3    0 2391    0  158    0
+        CU   70    0    0  886    0   89
+        SI    0    0    9    0  916    0
+        ST    0    0    0    0    0    0
+
+Overall Statistics
+                                          
+               Accuracy : 0.9402          
+                 95% CI : (0.9352, 0.9449)
+    No Information Rate : 0.2655          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.9229          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: SL Class: CH Class: FF Class: CU Class: SI
+Sensitivity             0.9663    1.0000    0.9688   0.99887   0.77496
+Specificity             0.9875    0.9793    0.9768   0.98132   0.99890
+Pos Pred Value          0.9598    0.9458    0.9369   0.84785   0.99027
+Neg Pred Value          0.9895    1.0000    0.9888   0.99988   0.96862
+Prevalence              0.2367    0.2655    0.2625   0.09435   0.12573
+Detection Rate          0.2287    0.2655    0.2543   0.09425   0.09744
+Detection Prevalence    0.2383    0.2807    0.2715   0.11116   0.09839
+Balanced Accuracy       0.9769    0.9896    0.9728   0.99010   0.88693
+                     Class: ST
+Sensitivity            0.00000
+Specificity            1.00000
+Pos Pred Value             NaN
+Neg Pred Value         0.98479
+Prevalence             0.01521
+Detection Rate         0.00000
+Detection Prevalence   0.00000
+Balanced Accuracy      0.50000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot percentages (Recall)</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(cm2<span class="sc">$</span>table) <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Reference) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> Freq <span class="sc">/</span> <span class="fu">sum</span>(Freq)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Prediction, Reference, <span class="at">fill =</span> Pct)) <span class="sc">+</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(Pct, <span class="at">accuracy =</span> <span class="dv">1</span>)), <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"gray87"</span>, <span class="at">high =</span> <span class="st">"forestgreen"</span>, <span class="at">labels =</span> scales<span class="sc">::</span>percent) <span class="sc">+</span> </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Prediction Accuracy % by Pitch Type (Sandoval)"</span>, <span class="at">x =</span> <span class="st">"Predicted"</span>, <span class="at">y =</span> <span class="st">"Actual"</span>) <span class="sc">+</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="trevor-rogers" class="level3">
+<h3 class="anchored" data-anchor-id="trevor-rogers">Trevor Rogers</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prep Rogers data</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>rogers <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/rogers_full.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pitch_type <span class="sc">!=</span> <span class="st">""</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>preds_rogers <span class="ot">&lt;-</span> rogers <span class="sc">%&gt;%</span> </span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">colnames</span>(train_x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.matrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xgb.DMatrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(xgb_fit, .) <span class="sc">%&gt;%</span> </span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type)[. <span class="sc">+</span> <span class="dv">1</span>]} </span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Align levels</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>u_levels <span class="ot">&lt;-</span> <span class="fu">union</span>(<span class="fu">unique</span>(preds_rogers), <span class="fu">unique</span>(rogers<span class="sc">$</span>pitch_type))</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>pred_fac <span class="ot">&lt;-</span> <span class="fu">factor</span>(preds_rogers, <span class="at">levels =</span> u_levels)</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>act_fac  <span class="ot">&lt;-</span> <span class="fu">factor</span>(rogers<span class="sc">$</span>pitch_type, <span class="at">levels =</span> u_levels)</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate stats</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>cm3 <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_fac, act_fac)</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cm3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   SL   SI   CH   FF   CU   ST
+        SL 1516    0    0    3    0  114
+        SI    0  626    1  571    0    0
+        CH   13  290 2455   48    0    1
+        FF    0   22    0 3837    0    0
+        CU   49    0    0    0    0    3
+        ST    0    0    0    0    0    0
+
+Overall Statistics
+                                          
+               Accuracy : 0.8832          
+                 95% CI : (0.8766, 0.8896)
+    No Information Rate : 0.467           
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.832           
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: SL Class: SI Class: CH Class: FF Class: CU
+Sensitivity             0.9607   0.66738    0.9996    0.8605        NA
+Specificity             0.9853   0.93357    0.9504    0.9957  0.994554
+Pos Pred Value          0.9284   0.52254    0.8746    0.9943        NA
+Neg Pred Value          0.9922   0.96264    0.9999    0.8907        NA
+Prevalence              0.1653   0.09823    0.2572    0.4670  0.000000
+Detection Rate          0.1588   0.06556    0.2571    0.4018  0.000000
+Detection Prevalence    0.1710   0.12546    0.2940    0.4041  0.005446
+Balanced Accuracy       0.9730   0.80048    0.9750    0.9281        NA
+                     Class: ST
+Sensitivity            0.00000
+Specificity            1.00000
+Pos Pred Value             NaN
+Neg Pred Value         0.98764
+Prevalence             0.01236
+Detection Rate         0.00000
+Detection Prevalence   0.00000
+Balanced Accuracy      0.50000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot percentages</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(cm3<span class="sc">$</span>table) <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Reference) <span class="sc">%&gt;%</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> Freq <span class="sc">/</span> <span class="fu">sum</span>(Freq)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Prediction, Reference, <span class="at">fill =</span> Pct)) <span class="sc">+</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(Pct, <span class="at">accuracy =</span> <span class="dv">1</span>)), <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"gray87"</span>, <span class="at">high =</span> <span class="st">"forestgreen"</span>, <span class="at">labels =</span> scales<span class="sc">::</span>percent) <span class="sc">+</span> </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Prediction Accuracy % by Pitch Type (Rogers)"</span>, <span class="at">x =</span> <span class="st">"Predicted"</span>, <span class="at">y =</span> <span class="st">"Actual"</span>) <span class="sc">+</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 6 rows containing missing values or values outside the scale range
+(`geom_text()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="right-handers---jake-arrieta" class="level3">
+<h3 class="anchored" data-anchor-id="right-handers---jake-arrieta">Right-Handers? - Jake Arrieta</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prep Rogers data</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>arrieta <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"./data/arrieta_full.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pitch_type <span class="sc">!=</span> <span class="st">""</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>preds_arrieta <span class="ot">&lt;-</span> arrieta <span class="sc">%&gt;%</span> </span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">colnames</span>(train_x)) <span class="sc">%&gt;%</span> </span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.matrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xgb.DMatrix</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(xgb_fit, .) <span class="sc">%&gt;%</span> </span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>  {<span class="fu">levels</span>(train_data<span class="sc">$</span>pitch_type)[. <span class="sc">+</span> <span class="dv">1</span>]} </span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Align levels</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>u_levels <span class="ot">&lt;-</span> <span class="fu">union</span>(<span class="fu">unique</span>(preds_arrieta), <span class="fu">unique</span>(arrieta<span class="sc">$</span>pitch_type))</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>pred_fac <span class="ot">&lt;-</span> <span class="fu">factor</span>(preds_arrieta, <span class="at">levels =</span> u_levels)</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>act_fac  <span class="ot">&lt;-</span> <span class="fu">factor</span>(arrieta<span class="sc">$</span>pitch_type, <span class="at">levels =</span> u_levels)</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate stats</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>cm4 <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_fac, act_fac)</span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cm4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   FF   CH   SL   CU   SI   IN
+        FF  801   11   15    0 1399    0
+        CH    0    1  508 1734    0    0
+        SL   95 1355 1823    8 5876    3
+        CU    0    0    1   18    0    0
+        SI    0    0    0    0    0    0
+        IN    0    0    0    0    0    0
+
+Overall Statistics
+                                          
+               Accuracy : 0.1937          
+                 95% CI : (0.1871, 0.2004)
+    No Information Rate : 0.533           
+    P-Value [Acc &gt; NIR] : 1               
+                                          
+                  Kappa : 0.0594          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: FF Class: CH Class: SL Class: CU Class: SI
+Sensitivity            0.89397 7.315e-04    0.7767  0.010227     0.000
+Specificity            0.88825 8.174e-01    0.3508  0.999916     1.000
+Pos Pred Value         0.35984 4.458e-04    0.1990  0.947368       NaN
+Neg Pred Value         0.99168 8.802e-01    0.8832  0.872184     0.467
+Prevalence             0.06565 1.002e-01    0.1720  0.128957     0.533
+Detection Rate         0.05869 7.327e-05    0.1336  0.001319     0.000
+Detection Prevalence   0.16310 1.643e-01    0.6712  0.001392     0.000
+Balanced Accuracy      0.89111 4.091e-01    0.5638  0.505072     0.500
+                     Class: IN
+Sensitivity          0.0000000
+Specificity          1.0000000
+Pos Pred Value             NaN
+Neg Pred Value       0.9997802
+Prevalence           0.0002198
+Detection Rate       0.0000000
+Detection Prevalence 0.0000000
+Balanced Accuracy    0.5000000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot percentages</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(cm4<span class="sc">$</span>table) <span class="sc">%&gt;%</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Reference) <span class="sc">%&gt;%</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> Freq <span class="sc">/</span> <span class="fu">sum</span>(Freq)) <span class="sc">%&gt;%</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Prediction, Reference, <span class="at">fill =</span> Pct)) <span class="sc">+</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(Pct, <span class="at">accuracy =</span> <span class="dv">1</span>)), <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"gray87"</span>, <span class="at">high =</span> <span class="st">"forestgreen"</span>, <span class="at">labels =</span> scales<span class="sc">::</span>percent) <span class="sc">+</span> </span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Prediction Accuracy % by Pitch Type (Rogers)"</span>, <span class="at">x =</span> <span class="st">"Predicted"</span>, <span class="at">y =</span> <span class="st">"Actual"</span>) <span class="sc">+</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="pitch_prediction_draft_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="fastball-seems-fine-but-the-prediction-doesnt-work-well-for-most-other-pitches-from-this-right-hander." class="level5">
+<h5 class="anchored" data-anchor-id="fastball-seems-fine-but-the-prediction-doesnt-work-well-for-most-other-pitches-from-this-right-hander.">Fastball seems fine, but the prediction doesn’t work well for most other pitches from this right hander.</h5>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

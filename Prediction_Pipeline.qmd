@@ -1,0 +1,43 @@
+---
+title: "Pitch Prediction Pipeline"
+format: html
+editor: visual
+---
+
+```{r}
+install.packages(c("baseballr", "tidyverse", "factoextra", "reticulate"))
+
+library(baseballr)
+library(tidyverse)
+library(factoextra)
+```
+
+### Columns of Interest
+
+```{r}
+feature_cols <- c(
+  "release_speed", "release_spin_rate", "release_extension",
+  "pfx_x", "pfx_z", "plate_x", "plate_z",
+  "vx0", "vy0", "vz0", "ax", "ay", "az",
+  "release_pos_x", "release_pos_y", "release_pos_z",
+  "spin_axis", "effective_speed"
+)
+```
+
+### Fetch Data
+
+```{r}
+info <- playerid_lookup("Skubal", "Tarik") %>% slice(1)
+pid <- info$mlbam_id
+# Uses system year for current players
+years <- as.numeric(info$mlb_played_first):as.numeric(format(Sys.Date(), "%Y"))
+
+df_raw <- map_dfr(years, \(y) {
+  scrape_statcast_savant_pitcher(
+    start_date = paste0(y, "-01-01"), 
+    end_date = paste0(y, "-12-31"), 
+    pitcherid = pid
+  )
+})
+
+```

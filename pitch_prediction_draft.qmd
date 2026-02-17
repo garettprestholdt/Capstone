@@ -1,0 +1,347 @@
+---
+title: "Pitch Prediction Draft"
+format: html
+editor: visual
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(factoextra)
+library(rpart)
+library(randomForest)
+library(xgboost)
+library(caret)
+library(DiagrammeR)
+library(DiagrammeRsvg)
+library(rsvg)
+library(rpart.plot)
+library(visNetwork)
+library(sparkline)
+
+full_data <- read.csv('./data/Skubal_All.csv') %>%
+  drop_na() %>%
+  filter(!pitch_type %in% c("FS", "FC", "KC", "")) %>% 
+  mutate(pitch_type = as.factor(pitch_type))
+
+numeric_vars <- full_data %>% 
+  select(release_speed:api_break_x_batter_in)
+
+head(full_data)
+```
+
+### PCA Analysis
+
+```{r}
+pca_data_full <- numeric_vars %>%
+  rename(
+    "Velocity"             = release_speed,
+    "Induced Hor. Break"      = pfx_x,
+    "Induced Vert. Break"     = pfx_z,
+    "Total Vert. Drop" = api_break_z_with_gravity,
+    "Acceleration-X"          = ax,
+    "Acceleration-Y"          = ay,
+    "Acceleration-Z"          = az,
+    "Spin Rate"               = release_spin_rate,
+    "Spin Axis"               = spin_axis
+  )
+
+pca_fit <- prcomp(pca_data_full, scale = TRUE)
+
+summary(pca_fit)
+
+fviz_eig(pca_fit, addlabels = TRUE, ylim = c(0, 40)) +
+  labs(title = "Scree Plot: Variance Explained by PC") +
+  theme_classic() +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
+
+fviz_contrib(pca_fit, choice = "var", axes = 1, top = 10) +
+  labs(title = "Contribution to PC1", x = '') +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
+
+vars_to_display <- c(
+  "Velocity",
+  "Induced Hor. Break", 
+  "Induced Vert. Break",
+  "Total Vert. Drop",
+  "Acceleration-X", 
+  "Acceleration-Y", 
+  "Acceleration-Z",
+  "Spin Rate",
+  "Spin Axis"
+)
+
+# CH (Light Blue), CU (Dark Blue), FF (Red), SI (Orange), SL (Purple)
+pitch_colors <- c("#4EB3D3", "#084081", "#E31A1C", "#FD8D3C", "#88419D")
+
+fviz_pca_biplot(pca_fit,
+                geom.ind = "point",
+                col.ind = full_data$pitch_type,
+                palette = pitch_colors,
+                addEllipses = FALSE,
+                ellipse.type = "convex",
+                legend.title = "Pitch Type",
+                pointshape = 19,
+                alpha.ind = 0.4,
+                select.var = list(name = vars_to_display), 
+                col.var = "black",
+                repel = TRUE) +
+  labs(title = "PCA Biplot: Velocity vs. Movement",
+       subtitle = "Warm colors = Fastballs | Cool colors = Offspeed/Breaking") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Model Building and Splitting
+
+```{r}
+set.seed(326)
+n <- nrow(full_data)
+
+train_idx <- sample(1:n, size = 0.7 * n)
+train_data <- full_data[train_idx, ]
+
+remaining_data <- full_data[-train_idx, ]
+n_rem <- nrow(remaining_data)
+test_idx <- sample(1:n_rem, size = (2/3) * n_rem)
+
+test_data <- remaining_data[test_idx, ]
+val_data  <- remaining_data[-test_idx, ]
+
+head(train_data)
+```
+
+### CART Model
+
+```{r}
+cart_fit <- rpart(pitch_type ~ ., data = train_data, method = "class")
+cart_pred <- predict(cart_fit, test_data, type = "class")
+
+confusionMatrix(cart_pred, test_data$pitch_type)
+
+# Visual
+graph_widget <- visTree(cart_fit, 
+                        main = "Pitch Type Classification Tree", 
+                        width = "100%", 
+                        height = "800px", 
+                        nodesPopSize = TRUE) %>% 
+  visNodes(font = list(size = 26, face = "bold", color = "black")) %>%
+  visEdges(font = list(size = 18, 
+                       align = "horizontal", 
+                       background = "white", 
+                       strokeWidth = 0)) %>% 
+  visHierarchicalLayout(direction = "UD", 
+                        levelSeparation = 200, 
+                        nodeSpacing = 250) %>% 
+  visOptions(highlightNearest = list(enabled = TRUE, degree = 1)) %>%
+  visInteraction(dragNodes = TRUE, 
+                 zoomView = TRUE)
+
+graph_widget
+```
+
+### Random Forest
+
+```{r}
+rf_fit <- randomForest(pitch_type ~ ., data = train_data, ntree = 500)
+rf_pred <- predict(rf_fit, test_data)
+
+confusionMatrix(rf_pred, test_data$pitch_type)
+varImpPlot(rf_fit)
+```
+
+### XGBoost
+
+```{r}
+train_x <- data.matrix(select(train_data, -pitch_type))
+train_y <- as.numeric(train_data$pitch_type) - 1
+
+test_x  <- data.matrix(select(test_data, -pitch_type))
+test_y  <- as.numeric(test_data$pitch_type) - 1
+
+dtrain <- xgb.DMatrix(data = train_x, label = train_y)
+dtest  <- xgb.DMatrix(data = test_x, label = test_y)
+
+xgb_fit <- xgb.train(
+  data = dtrain,
+  nrounds = 100,
+  objective = "multi:softmax",
+  num_class = length(unique(train_y)),
+  verbose = 0
+)
+
+xgb_pred_num <- predict(xgb_fit, dtest)
+xgb_pred_fac <- factor(levels(train_data$pitch_type)[xgb_pred_num + 1],
+                       levels = levels(train_data$pitch_type))
+
+confusionMatrix(xgb_pred_fac, test_data$pitch_type)
+
+# visual
+graph_widget <- xgb.plot.tree(model = xgb_fit, tree_idx = 1)
+
+# 2. Convert the widget to SVG code
+# This bridges the gap since we can't use render=FALSE anymore
+svg_code <- export_svg(graph_widget)
+
+# 3. Export to High-Res PDF (Best for reports)
+rsvg_pdf(charToRaw(svg_code), file = "./Visuals/skubal_tree_highres.pdf")
+
+# 4. Export to High-Res PNG (Best for slides)
+# width/height control the resolution
+rsvg_png(charToRaw(svg_code), file = "./Visuals/skubal_tree_highres.png", width = 3000)
+```
+
+### Does this model perform well on other pitchers?
+
+##### Ryan Weathers is also a left-handed pitcher with a similar arsenal, he throws a sweeper instead of a typical curveball, however.
+
+```{r}
+# Load and prep
+weathers <- read.csv("./data/weathers_full.csv") %>%
+  drop_na() %>%
+  filter(pitch_type != "")
+
+# Predict
+preds_weathers <- weathers %>% 
+  select(colnames(train_x)) %>% 
+  data.matrix() %>% 
+  xgb.DMatrix() %>% 
+  predict(xgb_fit, .) %>% 
+  {levels(train_data$pitch_type)[. + 1]} 
+
+# Align levels
+u_levels <- union(unique(preds_weathers), unique(weathers$pitch_type))
+pred_fac <- factor(preds_weathers, levels = u_levels)
+act_fac  <- factor(weathers$pitch_type, levels = u_levels)
+
+# Generate stats
+cm1 <- confusionMatrix(pred_fac, act_fac)
+print(cm1)
+
+# Plot percentages (Recall)
+as.data.frame(cm1$table) %>%
+  group_by(Reference) %>%
+  mutate(Pct = Freq / sum(Freq)) %>%
+  ggplot(aes(Prediction, Reference, fill = Pct)) +
+  geom_tile() +
+  geom_text(aes(label = scales::percent(Pct, accuracy = 1)), color = "white") +
+  scale_fill_gradient(low = "gray87", high = "forestgreen", labels = scales::percent) + 
+  labs(title = "Prediction Accuracy % by Pitch Type (Weathers)", x = "Predicted", y = "Actual") +
+  theme_minimal()
+```
+
+### The model did pretty decently overall, with at least 87% balanced accuracy for all pitches that were in the training data (those in Skubal's Arsenal). However, Ryan Weathers has a pretty similar movement profile as Skubal, so next I'll look at a pitcher with some of the same pitches, but maybe not quite as elite of a movement profile as these two, that being Patrick Sandoval, he's pretty much perfect for this because he throws the same 5 pitches as skubal does, according to baseballsavant.com.
+
+### Patrick Sandoval
+
+```{r}
+# Load and prep Sandoval data
+sandoval <- read.csv("./data/sandoval_full.csv") %>%
+  drop_na() %>%
+  filter(pitch_type != "")
+
+# Predict
+preds_sand <- sandoval %>% 
+  select(colnames(train_x)) %>% 
+  data.matrix() %>% 
+  xgb.DMatrix() %>% 
+  predict(xgb_fit, .) %>% 
+  {levels(train_data$pitch_type)[. + 1]} 
+
+# Align levels
+u_levels <- union(unique(preds_sand), unique(sandoval$pitch_type))
+pred_fac <- factor(preds_sand, levels = u_levels)
+act_fac  <- factor(sandoval$pitch_type, levels = u_levels)
+
+# Generate stats
+cm2 <- confusionMatrix(pred_fac, act_fac)
+print(cm2)
+
+# Plot percentages (Recall)
+as.data.frame(cm2$table) %>%
+  group_by(Reference) %>%
+  mutate(Pct = Freq / sum(Freq)) %>%
+  ggplot(aes(Prediction, Reference, fill = Pct)) +
+  geom_tile() +
+  geom_text(aes(label = scales::percent(Pct, accuracy = 1)), color = "white") +
+  scale_fill_gradient(low = "gray87", high = "forestgreen", labels = scales::percent) + 
+  labs(title = "Prediction Accuracy % by Pitch Type (Sandoval)", x = "Predicted", y = "Actual") +
+  theme_minimal()
+```
+
+### Trevor Rogers
+
+```{r}
+# Load and prep Rogers data
+rogers <- read.csv("./data/rogers_full.csv") %>%
+  drop_na() %>%
+  filter(pitch_type != "")
+
+# Predict
+preds_rogers <- rogers %>% 
+  select(colnames(train_x)) %>% 
+  data.matrix() %>% 
+  xgb.DMatrix() %>% 
+  predict(xgb_fit, .) %>% 
+  {levels(train_data$pitch_type)[. + 1]} 
+
+# Align levels
+u_levels <- union(unique(preds_rogers), unique(rogers$pitch_type))
+pred_fac <- factor(preds_rogers, levels = u_levels)
+act_fac  <- factor(rogers$pitch_type, levels = u_levels)
+
+# Generate stats
+cm3 <- confusionMatrix(pred_fac, act_fac)
+print(cm3)
+
+# Plot percentages
+as.data.frame(cm3$table) %>%
+  group_by(Reference) %>%
+  mutate(Pct = Freq / sum(Freq)) %>%
+  ggplot(aes(Prediction, Reference, fill = Pct)) +
+  geom_tile() +
+  geom_text(aes(label = scales::percent(Pct, accuracy = 1)), color = "white") +
+  scale_fill_gradient(low = "gray87", high = "forestgreen", labels = scales::percent) + 
+  labs(title = "Prediction Accuracy % by Pitch Type (Rogers)", x = "Predicted", y = "Actual") +
+  theme_minimal()
+```
+
+### Right-Handers? - Jake Arrieta (retired but threw mostly same pitches)
+
+```{r}
+# Load and prep Rogers data
+arrieta <- read.csv("./data/arrieta_full.csv") %>%
+  drop_na() %>%
+  filter(pitch_type != "")
+
+# Predict
+preds_arrieta <- arrieta %>% 
+  select(colnames(train_x)) %>% 
+  data.matrix() %>% 
+  xgb.DMatrix() %>% 
+  predict(xgb_fit, .) %>% 
+  {levels(train_data$pitch_type)[. + 1]} 
+
+# Align levels
+u_levels <- union(unique(preds_arrieta), unique(arrieta$pitch_type))
+pred_fac <- factor(preds_arrieta, levels = u_levels)
+act_fac  <- factor(arrieta$pitch_type, levels = u_levels)
+
+# Generate stats
+cm4 <- confusionMatrix(pred_fac, act_fac)
+print(cm4)
+
+# Plot percentages
+as.data.frame(cm4$table) %>%
+  group_by(Reference) %>%
+  mutate(Pct = Freq / sum(Freq)) %>%
+  ggplot(aes(Prediction, Reference, fill = Pct)) +
+  geom_tile() +
+  geom_text(aes(label = scales::percent(Pct, accuracy = 1)), color = "white") +
+  scale_fill_gradient(low = "gray87", high = "forestgreen", labels = scales::percent) + 
+  labs(title = "Prediction Accuracy % by Pitch Type (Arrieta)", x = "Predicted", y = "Actual") +
+  theme_minimal()
+```
+
+##### Fastball seems fine, but the prediction doesn't work well for most other pitches from this right hander.

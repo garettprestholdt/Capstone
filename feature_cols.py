@@ -1,8 +1,8 @@
 feature_cols = [
+    'pitch_type',
     'release_speed',
  'release_pos_x',
  'release_pos_z',
- 'zone',
  'pfx_x',
  'pfx_z',
  'plate_x',
@@ -20,11 +20,6 @@ feature_cols = [
  'release_extension',
  'release_pos_y',
  'spin_axis',
- 'delta_home_win_exp',
- 'delta_run_exp',
- 'delta_pitcher_run_exp',
- 'home_win_exp',
- 'bat_win_exp',
  'api_break_z_with_gravity',
  'api_break_x_arm',
  'api_break_x_batter_in'

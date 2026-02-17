@@ -1,0 +1,286 @@
+---
+title: "Capstone PCA Process"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(factoextra)
+library(patchwork)
+
+raw_data <- read.csv('./data/Skubal_Features.csv')
+clean_data <- na.omit(raw_data)
+final_data <- clean_data %>% select(where(~ var(.) > 0))
+
+# PCA
+pca <- prcomp(final_data, scale = TRUE)
+summary(pca)
+
+# Variance
+pca.var <- pca$sdev^2
+pca.var.per <- round(pca.var/sum(pca.var)*100,1)
+
+# Loading Scores
+loading_scores <- pca$rotation[,1]
+variable_scores <- abs(loading_scores)
+scores_ranked <- sort(variable_scores, decreasing=TRUE)
+top_10 <- names(scores_ranked[1:10])
+top_10
+
+pca$rotation[top_10,1]
+
+# scree plots
+fviz_eig(pca)
+
+# with eigenvalues
+fviz_eig(pca, geom='line', 
+         choice = 'eigenvalue') +
+  labs(title='Scree plot, eigenvalues') +
+  theme_classic(base_size = 16) 
+
+# contribution to 1st dimension
+fviz_contrib(pca, choice = "var", axes = 1) +
+  theme_classic(base_size = 16) +
+  labs(
+    x = "Variable",
+    title = "Contribution to First Dimension"
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 70,
+      hjust = 1,
+      vjust = 1,
+      size = 10
+    )
+  )
+
+# First 6 Dims
+c1 <- fviz_contrib(pca, choice='var', axes = c(1.2))
+c2 <- fviz_contrib(pca, choice='var', axes = 2)
+c3 <- fviz_contrib(pca, choice='var', axes = 3)
+c4 <- fviz_contrib(pca, choice='var', axes = 4)
+c5 <- fviz_contrib(pca, choice='var', axes = 5)
+c6 <- fviz_contrib(pca, choice='var', axes = 6)
+
+(c1)
+(c2)
+(c3)
+(c4)
+(c5)
+# Loading Plot
+fviz_pca_var(pca, axes= c(1,2))
+
+pca$rotation[,1:2]
+
+#Biplot
+fviz_pca(pca, axes = 1:2)
+```
+
+### With Pitch Type
+
+```{r}
+library(tidyverse)
+library(factoextra)
+
+Full_data <- read.csv('./data/Skubal_All.csv') %>% drop_na()
+
+Full_data %>% 
+  count(pitch_type, sort = TRUE)
+
+clean_data <- Full_data %>% 
+  filter(!pitch_type %in% c("FS", "FC", "KC", ""))
+
+numeric_variables <- clean_data %>% 
+  select(release_speed:api_break_x_batter_in)
+
+pca_full <- prcomp(numeric_variables, scale = TRUE)
+summary(pca_full)
+
+fviz_pca_biplot(pca_full,
+                axes = c(1, 2),
+                geom.ind = "point", 
+                label = "var",  
+                col.ind = clean_data$pitch_type, 
+                pointshape = 15,
+                alpha.ind = 0.6,     
+                repel = TRUE,          
+                legend.title = "Pitch Type")
+```
+
+### Calculating PCA by hand for 4 most important PC1 variables.
+
+```{r}
+numeric_hand <- Full_data %>% select(api_break_z_with_gravity, release_speed, 
+                                     vy0, effective_speed)
+
+# PCA basis to check off
+pca_4 <- princomp(numeric_hand, cor = TRUE)
+summary(pca_4)
+
+# Scale Data (Mean Center and Divide by SD)
+# Calculate column means and SDs
+(mu <- colMeans(numeric_hand))
+(std_dev <- apply(numeric_hand, 2, sd))
+
+# Data point - Mean / SD
+head((scaled_manual <- scale(numeric_hand, center = TRUE, scale = TRUE)))
+
+# Correlation Matrix (Covariance of Scaled Data)
+(corrmatrix <- cor(numeric_hand))
+eig <- eigen(corrmatrix)
+eig
+
+# PC Scores
+X_mat <- as.matrix(scaled_manual)
+
+# 2. Perform the multiplication with vectors
+head(scores <- X_mat %*% eig$vectors)
+
+head((variances_from_scores <- apply(scores, 2, var)))
+# 2. Calculate Proportion of Variance from these new variances
+total_variance <- sum(variances_from_scores)
+(prop_var <- variances_from_scores / total_variance)
+summary(pca_4)
+```
+
+### 2/4/26
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(factoextra)
+library(patchwork)
+
+Full_data <- read.csv('./data/Skubal_All.csv') %>% drop_na()
+numeric_variables <- Full_data %>% select(release_speed:api_break_x_batter_in)
+
+x_scaled <- scale(numeric_variables)
+pca_scaled <- prcomp(x_scaled, scale = FALSE)
+summary(pca_scaled)
+
+# Loadings
+(loadings <- pca_scaled$rotation )
+
+# Scores
+(scores <- pca_scaled$x)
+
+# Reproduce
+(reconstructed_x <- scores %*% t(loadings))
+
+# Perfect Match of original Scaled "X"
+head(round(reconstructed_x, 5)[,1:5])
+head(round(x_scaled, 5)[,1:5])
+
+# X and PCA loadings to reproduce scores
+manual_scores <- x_scaled %*% loadings
+head(manual_scores)
+head(scores) # match
+
+# Verify col variances of X sum to num of cols.
+sum(apply(x_scaled, 2, var)) # scaled, so std = 1 per col
+sum(pca_scaled$sdev^2) # matches
+
+# Verify loading directions
+loading_data <- as.data.frame(pca_scaled$rotation)
+loading_data$Variable <- rownames(loading_data)
+
+# 2. Plot PC1 vs PC2
+ggplot(loading_data, aes(x = PC1, y = PC2, label = Variable)) +
+  geom_segment(aes(xend = PC1, yend = PC2), x = 0, y = 0, 
+               arrow = arrow(length = unit(0.2, "cm")), color = "darkgrey") +
+  geom_text(color = "blue", size = 3, vjust = -0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  coord_fixed() +
+  theme_minimal() +
+  labs(title = "Variable Loading Plot (PC1 vs PC2)",
+       x = "PC1 Direction", 
+       y = "PC2 Direction")
+
+```
+
+##### These scores are close to the pca_4 values, the discrepancy is due to how they were calculated. I guess prcomp (which I used originally computed using SVD). When I used princomp() I got the exact same scores.
+
+##### Looking into the difference a bit I found that prcomp is generally preferred. The goal is the same for both methods, the difference lies in that prcomp uses SVD to compute and princomp uses eigen decomposition on cov / cor matrix.
+
+##### Moving forward I will be using the prcomp values.
+
+### XGboost
+
+### Random Forest / CART
+
+```{r}
+library(tidyverse)
+library(rpart)            # CART
+library(randomForest)     # Random Forest
+library(xgboost)          # XGBoost
+library(caret)            # Confusion Matrix
+
+# 1. Setup Data
+# [cite_start]Filter pitch types and select vars based on your previous code [cite: 3]
+model_data <- Full_data %>% 
+  filter(!pitch_type %in% c("FS", "FC", "KC", "")) %>% 
+  select(pitch_type, release_speed:api_break_x_batter_in) %>% 
+  mutate(pitch_type = as.factor(pitch_type)) %>% 
+  drop_na()
+
+# 2. Split (70% Train, 20% Test, 10% Validation)
+set.seed(123)
+n <- nrow(model_data)
+
+train_idx <- sample(1:n, size = 0.7 * n)
+train <- model_data[train_idx, ]
+
+remaining <- model_data[-train_idx, ]
+n_rem <- nrow(remaining)
+
+# Take 2/3 of remaining 30% to get 20% total
+test_idx <- sample(1:n_rem, size = (2/3) * n_rem)
+test <- remaining[test_idx, ]
+val  <- remaining[-test_idx, ]
+
+# 3. CART (Decision Tree)
+tree_fit <- rpart(pitch_type ~ ., data = train, method = "class")
+
+# Predict & Evaluate
+tree_pred <- predict(tree_fit, test, type = "class")
+confusionMatrix(tree_pred, test$pitch_type)
+
+# 4. Random Forest
+rf_fit <- randomForest(pitch_type ~ ., data = train, ntree = 500)
+
+# Predict & Evaluate
+rf_pred <- predict(rf_fit, test)
+confusionMatrix(rf_pred, test$pitch_type)
+
+# 5. XGBoost
+# Needs numeric matrix and 0-indexed labels
+train_x <- data.matrix(select(train, -pitch_type))
+train_y <- as.numeric(train$pitch_type) - 1
+
+test_x <- data.matrix(select(test, -pitch_type))
+test_y <- as.numeric(test$pitch_type) - 1
+
+dtrain <- xgb.DMatrix(data = train_x, label = train_y)
+dtest  <- xgb.DMatrix(data = test_x, label = test_y)
+
+# Train
+xgb_fit <- xgb.train(data = dtrain, 
+                   nrounds = 100, 
+                   objective = "multi:softmax", 
+                   num_class = length(unique(train_y)),
+                   verbose = 0)
+
+
+# Predict & Evaluate
+xgb_pred_num <- predict(xgb_fit, dtest)
+xgb_pred_fac <- factor(levels(train$pitch_type)[xgb_pred_num + 1], 
+                       levels = levels(train$pitch_type))
+
+confusionMatrix(xgb_pred_fac, test$pitch_type)
+
+#verify
+varImpPlot(rf_fit)
+```

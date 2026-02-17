@@ -1,0 +1,89 @@
+---
+title: "Skubal Pitch Prediction"
+format: html
+editor: visual
+---
+
+### Data Cleaning
+
+```{r}
+# 1. Setup & Data Cleaning
+
+library(tidyverse)
+library(GGally)
+library(factoextra)
+library(patchwork)
+
+# Load Data
+Full_data <- read.csv('./data/Skubal_All.csv') %>% drop_na()
+
+# Filter out rare pitches (outliers) so they don't skew the PCA
+# Removing Splitters (FS), Cutters (FC), Knuckle Curves (KC), and blanks
+clean_data <- Full_data %>% 
+  filter(!pitch_type %in% c("FS", "FC", "KC", ""))
+
+# Select numeric variables for PCA
+numeric_variables <- clean_data %>% 
+  select(release_speed:api_break_x_batter_in)
+
+# Quick check of counts to verify cleaning
+clean_data %>% count(pitch_type, sort = TRUE)
+```
+
+### PCA
+
+```{r}
+# Run PCA on scaled data (mean=0, sd=1)
+pca_full <- prcomp(numeric_variables, scale = TRUE)
+
+# Summary of Variance Explained
+summary(pca_full)
+```
+
+### Loadings and Variance Contributions
+
+```{r}
+# Extract the variable contribution table from the PCA object
+# This converts loadings into percentages (Contribution = Loading^2 * 100)
+var_info <- get_pca_var(pca_full)
+pc1_contrib <- var_info$contrib[, 1] # Grab just PC1 column
+
+# Sort by highest contribution first
+pc1_sorted <- sort(pc1_contrib, decreasing = TRUE)
+
+# Print Top 10 Variables for PC1
+print("Top 10 Variables contributing to PC1 Variance (%):")
+print(head(pc1_sorted, 10))
+```
+
+### Visualizations
+
+```{r}
+# Scree plot (Eigenvalues) - How many PCs do we need?
+fviz_eig(pca_full, geom='line', choice = 'eigenvalue') +
+  labs(title='Scree plot, eigenvalues') +
+  theme_classic(base_size = 14)
+
+# Contribution of variables to Dim 1 (Visual)
+fviz_contrib(pca_full, choice = "var", axes = 1) +
+  theme_classic(base_size = 14) +
+  labs(title = "Contribution to First Dimension") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Loading Plot (Vector Directions)
+# Shows correlation between variables
+fviz_pca_var(pca_full, axes = c(1, 2), repel = TRUE)
+
+# Maps both the variable directions and the individual pitches
+fviz_pca_biplot(pca_full,
+                axes = c(1, 2),
+                geom.ind = "point", 
+                label = "var",  
+                col.ind = clean_data$pitch_type, 
+                pointshape = 15,
+                alpha.ind = 0.6,     
+                repel = TRUE,          
+                legend.title = "Pitch Type")
+```
+
+### KMeans Clustering
