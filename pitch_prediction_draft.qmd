@@ -5,6 +5,7 @@ editor: visual
 ---
 
 ```{r message=FALSE, warning=FALSE}
+library(readr)
 library(tidyverse)
 library(factoextra)
 library(rpart)
@@ -344,3 +345,73 @@ as.data.frame(cm4$table) %>%
 ```
 
 ##### Fastball seems fine, but the prediction doesn't work well for most other pitches from this right hander.
+
+### Random Sample of Pitches from 23-24 dataset
+
+```{r}
+
+full <- readRDS('./data/23_24_pitch_data.rds')
+
+# Base sample and filtering
+set.seed(111)
+base_sample <- full[sample(nrow(full), 15000), ] %>% 
+  group_by(pitch_type) %>% 
+  filter(n() >= 201) %>% 
+  ungroup() %>%
+  mutate(pitch_type = as.factor(pitch_type))
+
+# --- LHP MODEL ---
+data_L <- base_sample %>% filter(p_throws == "L") %>% select(-p_throws) %>% droplevels()
+
+set.seed(111)
+train_idx_L <- createDataPartition(data_L$pitch_type, p = 0.8, list = FALSE)
+train_L <- data_L[train_idx_L, ]
+test_L  <- data_L[-train_idx_L, ]
+
+train_y_L <- as.numeric(train_L$pitch_type) - 1
+test_y_L  <- as.numeric(test_L$pitch_type) - 1
+
+dtrain_L <- xgb.DMatrix(data = data.matrix(select(train_L, -pitch_type)), label = train_y_L)
+dtest_L  <- xgb.DMatrix(data = data.matrix(select(test_L, -pitch_type)), label = test_y_L)
+
+xgb_L <- xgb.train(
+  params = list(objective = "multi:softmax", num_class = length(unique(train_y_L))),
+  data = dtrain_L, nrounds = 100, verbose = 0
+)
+
+pred_L <- factor(levels(train_L$pitch_type)[predict(xgb_L, dtest_L) + 1], levels = levels(train_L$pitch_type))
+cm_L <- confusionMatrix(pred_L, test_L$pitch_type)
+
+# --- RHP MODEL ---
+data_R <- base_sample %>% filter(p_throws == "R") %>% select(-p_throws) %>% droplevels()
+
+set.seed(111)
+train_idx_R <- createDataPartition(data_R$pitch_type, p = 0.8, list = FALSE)
+train_R <- data_R[train_idx_R, ]
+test_R  <- data_R[-train_idx_R, ]
+
+train_y_R <- as.numeric(train_R$pitch_type) - 1
+test_y_R  <- as.numeric(test_R$pitch_type) - 1
+
+dtrain_R <- xgb.DMatrix(data = data.matrix(select(train_R, -pitch_type)), label = train_y_R)
+dtest_R  <- xgb.DMatrix(data = data.matrix(select(test_R, -pitch_type)), label = test_y_R)
+
+xgb_R <- xgb.train(
+  params = list(objective = "multi:softmax", num_class = length(unique(train_y_R))),
+  data = dtrain_R, nrounds = 100, verbose = 0
+)
+
+pred_R <- factor(levels(train_R$pitch_type)[predict(xgb_R, dtest_R) + 1], levels = levels(train_R$pitch_type))
+cm_R <- confusionMatrix(pred_R, test_R$pitch_type)
+
+# --- RESULTS & IMPORTANCE ---
+cat("LHP Model Accuracy:", cm_L$overall["Accuracy"], "\n")
+cat("RHP Model Accuracy:", cm_R$overall["Accuracy"], "\n")
+
+# var importance
+imp_L <- xgb.importance(feature_names = colnames(dtrain_L), model = xgb_L)
+xgb.plot.importance(imp_L, top_n = 15, main = "LHP Variable Importance")
+imp_R <- xgb.importance(feature_names = colnames(dtrain_R), model = xgb_R)
+xgb.plot.importance(imp_R, top_n = 15, main = "RHP Variable Importance")
+
+```

@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1419029/2459f87b6ff04f15a02623e2b24ef076
+bundleId: https://api.rpubs.com/api/v1/document/1419029/2459f87b6ff04f15a02623e2b24ef076
+url: http://rpubs.com/gprestholdt/1419029
+version: 1
